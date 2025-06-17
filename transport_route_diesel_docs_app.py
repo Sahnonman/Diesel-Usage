@@ -17,13 +17,13 @@ mode = st.radio(
 )
 if mode == "Calculate rate from usage":
     with st.form("consumption_rate_form"):
-        monthly_mileage = st.number_input("Monthly distance (km)", min_value=0.0, value=1000.0)
-        monthly_fuel = st.number_input("Monthly fuel used (liters)", min_value=0.0, value=200.0)
+        monthly_mileage = st.number_input("Monthly distance per truck (km)", min_value=0.0, value=1000.0)
+        monthly_fuel = st.number_input("Monthly fuel used per truck (liters)", min_value=0.0, value=200.0)
         submit_rate = st.form_submit_button("Compute Consumption Rate")
     if submit_rate:
         if monthly_mileage > 0:
             cons_rate = monthly_fuel / monthly_mileage
-            st.success(f"Consumption rate: {cons_rate:.3f} L/km")
+            st.success(f"Consumption rate: {cons_rate:.3f} L/km per truck")
             st.session_state['cons_rate'] = cons_rate
             st.session_state['mileage'] = monthly_mileage
         else:
@@ -31,22 +31,29 @@ if mode == "Calculate rate from usage":
 else:
     with st.form("diesel_cost_form"):
         monthly_mileage = st.number_input(
-            "Monthly distance (km)", min_value=0.0, value=st.session_state.get('mileage', 1000.0)
+            "Monthly distance per truck (km)",
+            min_value=0.0,
+            value=st.session_state.get('mileage', 1000.0)
         )
         cons_rate = st.number_input(
-            "Consumption rate (L/km)", min_value=0.0, value=st.session_state.get('cons_rate', 0.3)
+            "Consumption rate (L/km)",
+            min_value=0.0,
+            value=st.session_state.get('cons_rate', 0.3)
         )
         fuel_price = st.number_input("Fuel price per liter (SAR)", min_value=0.0, value=2.50)
         weekly_limit = st.number_input("Weekly mileage limit per truck (km)", min_value=0.0, value=300.0)
+        fleet_size = st.number_input("Number of trucks in fleet", min_value=1, value=10, step=1)
         submit_cost = st.form_submit_button("Calculate Monthly Diesel Cost")
     if submit_cost:
-        cost = monthly_mileage * cons_rate * fuel_price
-        st.success(f"Monthly diesel cost: SAR {cost:,.2f}")
+        cost_per_truck = monthly_mileage * cons_rate * fuel_price
+        total_cost = cost_per_truck * fleet_size
+        st.success(f"Monthly diesel cost per truck: SAR {cost_per_truck:,.2f}")
+        st.success(f"Monthly diesel cost for fleet: SAR {total_cost:,.2f}")
         avg_weekly = monthly_mileage / 4
         if avg_weekly > weekly_limit:
             st.warning(f"⚠️ Avg weekly mileage {avg_weekly:.1f} km exceeds limit {weekly_limit} km.")
         else:
-            st.info(f"✅ Avg weekly mileage {avg_weekly:.1f} km within limit.")
+            st.info(f"✅ Avg weekly mileage {avg_weekly:.1f} km within limit per truck.")
 
 # ----- Section 2: Vehicle Document Expiry Reminders -----
 st.header("📅 Document Expiry Reminders")
@@ -109,3 +116,4 @@ if uploaded:
         st.info("No reminders to send today.")
 else:
     st.info("Please upload 'Documents' Excel to schedule reminders.")
+
